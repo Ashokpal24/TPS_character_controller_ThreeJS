@@ -101,7 +101,7 @@ let loadedCount=0;
 
 const modelTree=new THREE.Group();
 // Movement variables
-const moveSpeed=1.0
+const moveSpeed=0.5
 const rotationSpeed = 0.05;
 
 const animationsFiles=[
@@ -200,10 +200,13 @@ function RAF(){
             : direction
         );
         rotationAngle = Math.atan2(Xstrength, Zstrength);
-        translation = direction.clone().multiplyScalar(moveSpeed);
         targetQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotationAngle);
-        modelTree.position.add(translation);
-        model.quaternion.slerp(targetQuaternion, 0.05);
+        const camRotationAngle = outerCamNode.rotation.y;
+        const rotationQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), camRotationAngle);
+        modelTree.quaternion.copy(rotationQuaternion);
+        translation = direction.clone().applyQuaternion(rotationQuaternion);
+        modelTree.position.add(translation.multiplyScalar(moveSpeed));
+        model.quaternion.slerp(targetQuaternion, rotationSpeed);
         outerCamNode.position.copy(modelTree.position);
 
         // camera.rotation.y+=0.01
