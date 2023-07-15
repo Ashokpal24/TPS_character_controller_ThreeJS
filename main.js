@@ -36,13 +36,13 @@ light.shadow.mapSize.width=4096;
 light.shadow.mapSize.height=4096;
 light.shadow.camera.near=0.1;
 light.shadow.camera.far=200.0;
-light.shadow.camera.left=200.0;
-light.shadow.camera.right=-200.0;
+light.shadow.camera.left=100.0;
+light.shadow.camera.right=-100.0;
 light.shadow.camera.top=50.0;
 light.shadow.camera.bottom=-50.0;
 scene.add(light)
 
-light=new THREE.AmbientLight(0x404040);
+light=new THREE.AmbientLight(0x404040,2.0);
 scene.add(light);
 
 const plane=new THREE.Mesh(
@@ -199,25 +199,23 @@ function RAF(){
             ? new THREE.Vector3(0, 0, 1)
             : direction
         );
-        rotationAngle = Math.atan2(Xstrength, Zstrength);
-        targetQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotationAngle);
-        const camRotationAngle = outerCamNode.rotation.y;
-        const rotationQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), camRotationAngle);
-        modelTree.quaternion.copy(rotationQuaternion);
-        translation = direction.clone().applyQuaternion(rotationQuaternion);
-        modelTree.position.add(translation.multiplyScalar(moveSpeed));
-        model.quaternion.slerp(targetQuaternion, rotationSpeed);
-        outerCamNode.position.copy(modelTree.position);
-
-        // camera.rotation.y+=0.01
         const isMoving=direction.equals(new THREE.Vector3(0,0,0));
         if (!isMoving){
             newMotionState=CharState.RUN
+            const rotationQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), outerCamNode.rotation.y);
+            modelTree.quaternion.slerp(rotationQuaternion,0.05);
+            translation = direction.clone().applyQuaternion(rotationQuaternion);
+            modelTree.position.add(translation.multiplyScalar(moveSpeed));
         }
         else{
             newMotionState=CharState.IDLE
         }
         updateState(newMotionState)
+        rotationAngle = Math.atan2(Xstrength, Zstrength);
+        targetQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotationAngle);
+        model.quaternion.slerp(targetQuaternion, rotationSpeed);
+        outerCamNode.position.copy(modelTree.position);
+
         
     }
 
