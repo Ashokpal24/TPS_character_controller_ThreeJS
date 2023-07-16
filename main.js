@@ -6,7 +6,8 @@ import {FBXLoader} from "../node_modules/three/examples/jsm/loaders/FBXLoader.js
 
 const clock=new Clock()
 let delta=clock.getDelta();
-
+let skeleton;
+let handBone;
 const scene=new THREE.Scene();
 var innerCamNode = new THREE.Group();
 var outerCamNode = new THREE.Group();
@@ -55,6 +56,15 @@ plane.castShadow=false;
 plane.receiveShadow=true;
 plane.rotation.x=-Math.PI/2;
 scene.add(plane);
+
+const handObjectGeometry = new THREE.BoxGeometry(1, 3, 1); 
+const handObjectMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 }); 
+const handObject = new THREE.Mesh(handObjectGeometry, handObjectMaterial);
+handObject.castShadow=true;
+handObject.receiveShadow=true;
+handObject.position.set(0, 0, 0);
+handObject.rotation.set(0, 0, 0);
+scene.add(handObject)
 
 const direction = new THREE.Vector3();
 const targetQuaternion = new THREE.Quaternion();
@@ -122,8 +132,6 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth,window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-
-
 RAF();
 
 const CharState={
@@ -154,6 +162,12 @@ let loadAnimations=new Promise(function(res,rej){
             c.castShadow=true;
         })
         scene.add(model)
+        skeleton=new THREE.SkeletonHelper(model)
+        //use this if you want to see the skeleton
+        // scene.add(skeleton);
+        const bones=skeleton.bones;
+        handBone=bones.find((bone)=>bone.name==="mixamorigLeftHand");
+        console.log(handBone)
         loader.setPath(animationPath);
         animationsFiles.forEach((animationsFile)=>{
             loader.load(animationsFile,function(object){
@@ -216,7 +230,8 @@ function RAF(){
         model.quaternion.slerp(targetQuaternion, rotationSpeed);
         outerCamNode.position.copy(modelTree.position);
 
-        
+        handObject.position.copy(handBone.getWorldPosition(new THREE.Vector3()));
+        handObject.quaternion.copy(handBone.getWorldQuaternion(new THREE.Quaternion()));
     }
 
     requestAnimationFrame(()=>{
